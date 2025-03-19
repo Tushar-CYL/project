@@ -1,0 +1,6 @@
+streamlit
+pandas
+pyyaml
+plotly
+google-ads
+google-auth-oauthlib
