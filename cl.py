@@ -1558,14 +1558,9 @@ if yaml_config:
         }
     }
     
-    # Get redirect URI from yaml config
-    # Use the 'local_redirect_uri' when running locally, and 'deployed_redirect_uri' when deployed
-    if 'deployed' in yaml_config and yaml_config['deployed'] == True:
-        # Use the deployed redirect URI from yaml config
-        REDIRECT_URI = yaml_config.get('deployed_redirect_uri', 'http://localhost:8501')
-    else:
-        # Use local redirect URI from yaml config or default to localhost
-        REDIRECT_URI = yaml_config.get('local_redirect_uri', 'http://localhost:8501')
+    # Use the deployed redirect URI directly from the YAML file
+    # Make sure to add this field to your YAML file
+    REDIRECT_URI = yaml_config.get('redirect_uri', 'http://localhost:8501')
     
     SCOPES = ["https://www.googleapis.com/auth/adwords"]
 else:
