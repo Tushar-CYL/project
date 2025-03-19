@@ -1557,7 +1557,16 @@ if yaml_config:
             "token_uri": "https://accounts.google.com/o/oauth2/token"
         }
     }
-    REDIRECT_URI = "https://project-2-4l0v.onrender.com/"
+    
+    # Dynamic redirect URI based on environment
+    # When deployed, get the URL from Streamlit's environment or use a config value
+    if 'DEPLOYED' in st.secrets and st.secrets['DEPLOYED']:
+        # Use the deployed URL from secrets
+        REDIRECT_URI = st.secrets['REDIRECT_URI']
+    else:
+        # Use localhost for local development
+        REDIRECT_URI = "http://localhost:8501"
+    
     SCOPES = ["https://www.googleapis.com/auth/adwords"]
 else:
     st.error("Configuration file not found. Please ensure google-ads.yaml exists.")
