@@ -13,6 +13,8 @@ client_secret: "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"
 refresh_token: "1//0gkde4niI1ukKCgYIARAAGBASNwF-L9IrEj29rszsrXkUrURZtm1rXPM-btD5GrIC7IF47_aMMb835-sTgyOW-zHnD9lFR1iAAg4"
 login_customer_id: "6827724176"  # No hyphens (e.g., 1234567890)
 use_proto_plus: True
+DEPLOYED : true
+REDIRECT_URI : "https://project-2-4l0v.onrender.com/"
 
 
 
