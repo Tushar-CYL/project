@@ -1,6 +1,5 @@
-[google_ads]
-client_id = "1066464902006-281nv7e4l1el4glc92hd3tf2u2hrqd0t.apps.googleusercontent.com"
-client_secret = "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"
-developer_token = "HjVv11pZw7EnmYK6dLmlaw"
-login_customer_id = "6827724176"  # Keep
-use_proto_plus = true
+client_id : "1066464902006-281nv7e4l1el4glc92hd3tf2u2hrqd0t.apps.googleusercontent.com"
+client_secret : "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"
+developer_token : "HjVv11pZw7EnmYK6dLmlaw"
+login_customer_id : "6827724176"  
+use_proto_plus : true
