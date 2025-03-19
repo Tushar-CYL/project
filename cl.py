@@ -1557,7 +1557,7 @@ if yaml_config:
             "token_uri": "https://accounts.google.com/o/oauth2/token"
         }
     }
-    REDIRECT_URI = "https://project-kj9b.onrender.com/"
+    REDIRECT_URI = "http://localhost:8501"
     SCOPES = ["https://www.googleapis.com/auth/adwords"]
 else:
     st.error("Configuration file not found. Please ensure google-ads.yaml exists.")
