@@ -1,6 +1,6 @@
 streamlit
 pandas
-pyyaml
 plotly
 google-ads
+pyyaml
 google-auth-oauthlib
