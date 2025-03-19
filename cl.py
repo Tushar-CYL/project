@@ -10,8 +10,8 @@ from google.ads.googleads.errors import GoogleAdsException
 from google_auth_oauthlib.flow import Flow
 import base64
 import os
-IS_PRODUCTION = os.getenv("IS_PRODUCTION", "true").lower() == "true"
-BASE_URL = "https://adsync.streamlit.app" if IS_PRODUCTION else "http://localhost:8501"
+IS_PRODUCTION = os.getenv("IS_PRODUCTION", "false").lower() == "true"
+BASE_URL = os.getenv("https://project-3-zhaa.onrender.com") if IS_PRODUCTION else "http://localhost:8501"
 REDIRECT_URI = f"{BASE_URL}/oauth"
 
 # =================================================================
