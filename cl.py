@@ -9,13 +9,15 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google_auth_oauthlib.flow import Flow
 import base64
+import os
+IS_PRODUCTION = os.getenv("IS_PRODUCTION", "true").lower() == "true"
+BASE_URL = "https://adsync.streamlit.app" if IS_PRODUCTION else "http://localhost:8501"
+REDIRECT_URI = f"{BASE_URL}/oauth"
 
 # =================================================================
 # ENVIRONMENT CONFIGURATION
 # =================================================================
-IS_PRODUCTION = os.getenv("IS_PRODUCTION", "false").lower() == "true"
-BASE_URL = "https://adsync.streamlit.app" if IS_PRODUCTION else "http://localhost:8501"
-REDIRECT_URI = f"{BASE_URL}/oauth"
+
 
 # =================================================================
 # STYLING (Keep your original CSS intact)
