@@ -1558,14 +1558,14 @@ if yaml_config:
         }
     }
     
-    # Dynamic redirect URI based on environment
-    # When deployed, get the URL from Streamlit's environment or use a config value
-    if 'DEPLOYED' in st.secrets and st.secrets['DEPLOYED']:
-        # Use the deployed URL from secrets
-        REDIRECT_URI = st.secrets['REDIRECT_URI']
+    # Get redirect URI from yaml config
+    # Use the 'local_redirect_uri' when running locally, and 'deployed_redirect_uri' when deployed
+    if 'deployed' in yaml_config and yaml_config['deployed'] == True:
+        # Use the deployed redirect URI from yaml config
+        REDIRECT_URI = yaml_config.get('deployed_redirect_uri', 'http://localhost:8501')
     else:
-        # Use localhost for local development
-        REDIRECT_URI = "http://localhost:8501"
+        # Use local redirect URI from yaml config or default to localhost
+        REDIRECT_URI = yaml_config.get('local_redirect_uri', 'http://localhost:8501')
     
     SCOPES = ["https://www.googleapis.com/auth/adwords"]
 else:
