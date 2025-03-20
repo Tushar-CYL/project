@@ -285,7 +285,7 @@ if yaml_config:
         "token_uri": "https://oauth2.googleapis.com/token"
     }
 }
-    REDIRECT_URI = "https://adsync-e6x5.onrender.com"
+    REDIRECT_URI = "https://adsync-e6x5.onrender.com/oauth2callback"
     SCOPES = ["https://www.googleapis.com/auth/adwords"]
 else:
     st.error("Configuration file not found. Please ensure google-ads.yaml exists.")
