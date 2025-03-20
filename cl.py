@@ -84,16 +84,18 @@ def load_yaml_config():
 yaml_config = load_yaml_config()
 
 # OAuth Configuration
+# OAuth Configuration
 if yaml_config:
     CLIENT_CONFIG = {
         "web": {
             "client_id": yaml_config['client_id'],
             "client_secret": yaml_config['client_secret'],
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token"
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": ["https://adsync-e6x5.onrender.com/"]  # Add this line
         }
     }
-    REDIRECT_URI = "https://adsync-e6x5.onrender.com/"  # Updated redirect URI
+    REDIRECT_URI = "https://adsync-e6x5.onrender.com/"  # Must match exactly
     SCOPES = ["https://www.googleapis.com/auth/adwords"]
 else:
     st.error("Configuration file not found. Please ensure google-ads.yaml exists.")
