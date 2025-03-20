@@ -293,15 +293,15 @@ else:
     st.stop()
 
 def get_google_ads_client(credentials):
-    yaml_config = {
-        "developer_token": os.getenv("DEVELOPER_TOKEN"),
-        "client_id": os.getenv("CLIENT_ID"),
-        "client_secret": os.getenv("CLIENT_SECRET"),
-        "refresh_token": os.getenv("REFRESH_TOKEN"),
-        "token_uri": os.getenv("TOKEN_URI", "https://oauth2.googleapis.com/token"),
-        "login_customer_id": os.getenv("LOGIN_CUSTOMER_ID"),
-        "use_proto_plus": os.getenv("USE_PROTO_PLUS", "true").lower() == "true",
-    }
+    config = {
+        "developer_token": yaml_config.get("developer_token"),
+        "client_id": yaml_config.get("client_id"),
+        "client_secret": yaml_config.get("client_secret"),
+        "refresh_token": yaml_config.get("refresh_token"),
+        "token_uri": yaml_config.get("token_uri", "https://oauth2.googleapis.com/token"),
+        "login_customer_id": yaml_config.get("login_customer_id"),
+        "use_proto_plus": yaml_config.get("use_proto_plus", True),
+}
     return GoogleAdsClient.load_from_dict(config)
 
 def handle_oauth():
