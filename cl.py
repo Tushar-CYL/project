@@ -8,6 +8,7 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google_auth_oauthlib.flow import Flow
 import base64
+import os
 
 # Page Configuration
 st.set_page_config(
