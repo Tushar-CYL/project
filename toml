@@ -1,0 +1,11 @@
+[google_ads]
+developer_token = "HjVv11pZw7EnmYK6dLmlaw"
+
+[oauth]
+client_id = "1066464902006-4ifmdatrbtl0k82gq6jl2dtv4nvejjvi.apps.googleusercontent.com"
+client_secret = "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"
+refresh_token = "1//0gkde4niI1ukKCgYIARAAGBASNwF-L9IrEj29rszsrXkUrURZtm1rXPM-btD5GrIC7IF47_aMMb835-sTgyOW-zHnD9lFR1iAAg4"
+
+[account]
+login_customer_id = "6827724176"  # No hyphens (e.g., 1234567890)
+use_proto_plus = true
