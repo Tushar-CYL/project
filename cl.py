@@ -286,8 +286,8 @@ if yaml_config:
         "redirect_uris": ["https://adsync-e6x5.onrender.com/oauth2callback"]
     }
 }
-REDIRECT_URI = "https://adsync-e6x5.onrender.com/oauth2callback"
-SCOPES = ["https://www.googleapis.com/auth/adwords"]
+    REDIRECT_URI = "https://adsync-e6x5.onrender.com/oauth2callback"
+    SCOPES = ["https://www.googleapis.com/auth/adwords"]
 else:
     st.error("Configuration file not found. Please ensure google-ads.yaml exists.")
     st.stop()
