@@ -10,3 +10,4 @@ token_uri = "https://oauth2.googleapis.com/token"
 [account]
 login_customer_id = "6827724176"  # No hyphens
 use_proto_plus = true
+token_uri= "https://oauth2.googleapis.com/token"
