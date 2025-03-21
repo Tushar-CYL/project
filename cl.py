@@ -284,7 +284,7 @@ if yaml_config:
             "token_uri": "https://accounts.google.com/o/oauth2/token"
         }
     }
-    REDIRECT_URI = "https://adsync.streamlit.app"  # Replace with your actual URL
+    REDIRECT_URI = "https://adsync-uu8a.onrender.com"  # Replace with your actual URL
     SCOPES = [
         "https://www.googleapis.com/auth/adwords",
         "openid",
