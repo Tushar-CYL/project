@@ -308,25 +308,24 @@ def get_google_ads_client(credentials):
     return GoogleAdsClient.load_from_dict(config)
 
 def handle_oauth():
+    # Initialize the OAuth flow with PKCE
     flow = Flow.from_client_config(
         client_config=CLIENT_CONFIG,
         scopes=SCOPES,
-        redirect_uri=REDIRECT_URI
+        redirect_uri=REDIRECT_URI,
+        autogenerate_code_verifier=True  # This enables PKCE
     )
-
-    # Generate code_verifier if not stored in session
-    if "code_verifier" not in st.session_state:
-        st.session_state["code_verifier"] = flow.code_verifier
 
     query_params = st.query_params.to_dict()
 
     if 'code' not in query_params and 'credentials' not in st.session_state:
-        # Get authorization URL with PKCE challenge
+        # Generate authorization URL with PKCE parameters
         auth_url, _ = flow.authorization_url(
-            prompt="consent",
-            code_challenge=flow.code_challenge,
-            code_challenge_method="S256"
+            access_type='offline',
+            prompt='consent',
+            include_granted_scopes='true'
         )
+        
         st.markdown(f"""
         <div class="login-container">
             <div class="login-box">
@@ -342,16 +341,18 @@ def handle_oauth():
         return None
 
     elif 'code' in query_params and 'credentials' not in st.session_state:
-        # Ensure we pass the stored code_verifier
+        # Fetch tokens using the authorization code
         flow.fetch_token(
             code=query_params['code'],
-            code_verifier=st.session_state["code_verifier"]
+            code_verifier=flow.code_verifier  # Use the generated code_verifier
         )
+        
         credentials = flow.credentials
         st.session_state['credentials'] = {
             "token": credentials.token,
             "refresh_token": credentials.refresh_token
         }
+        
         st.query_params.clear()
         st.rerun()
 
