@@ -308,22 +308,24 @@ def get_google_ads_client(credentials):
     return GoogleAdsClient.load_from_dict(config)
 
 def handle_oauth():
-    # Initialize the OAuth flow with PKCE
     flow = Flow.from_client_config(
         client_config=CLIENT_CONFIG,
         scopes=SCOPES,
         redirect_uri=REDIRECT_URI,
-        autogenerate_code_verifier=True  # This enables PKCE
+        autogenerate_code_verifier=True
     )
 
     query_params = st.query_params.to_dict()
 
     if 'code' not in query_params and 'credentials' not in st.session_state:
-        # Generate authorization URL with PKCE parameters
+        # Store PKCE code_verifier in session state before generating URL
+        st.session_state["code_verifier"] = flow.code_verifier
+        st.session_state["code_challenge"] = flow.code_challenge
+        
         auth_url, _ = flow.authorization_url(
-            access_type='offline',
-            prompt='consent',
-            include_granted_scopes='true'
+            prompt="consent",
+            code_challenge=st.session_state["code_challenge"],
+            code_challenge_method="S256"
         )
         
         st.markdown(f"""
@@ -341,23 +343,30 @@ def handle_oauth():
         return None
 
     elif 'code' in query_params and 'credentials' not in st.session_state:
-        # Fetch tokens using the authorization code
-        flow.fetch_token(
-            code=query_params['code'],
-            code_verifier=flow.code_verifier  # Use the generated code_verifier
+        # Recreate the flow with stored code_verifier
+        flow = Flow.from_client_config(
+            client_config=CLIENT_CONFIG,
+            scopes=SCOPES,
+            redirect_uri=REDIRECT_URI,
+            code_verifier=st.session_state["code_verifier"]
         )
         
+        flow.fetch_token(code=query_params['code'])
         credentials = flow.credentials
+        
         st.session_state['credentials'] = {
             "token": credentials.token,
             "refresh_token": credentials.refresh_token
         }
         
+        # Cleanup PKCE parameters
+        del st.session_state["code_verifier"]
+        del st.session_state["code_challenge"]
+        
         st.query_params.clear()
         st.rerun()
 
     return st.session_state.get('credentials')
-
 
 # Rest of the code remains the same...
 
