@@ -20,7 +20,7 @@ st.set_page_config(
 # Modern 3D-style background and enhanced UI
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://accounts.google.com;">
     
     * {
         font-family: 'Poppins', sans-serif;
@@ -315,7 +315,7 @@ def handle_oauth():
     
     query_params = st.query_params.to_dict()
     if 'code' not in query_params and 'credentials' not in st.session_state:
-        auth_url, _ = flow.authorization_url()
+        auth_url, _ = flow.authorization_url(prompt="consent")
         st.markdown(f"""
         <div class="login-container">
             <div class="login-box">
