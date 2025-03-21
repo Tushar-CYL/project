@@ -317,15 +317,32 @@ def handle_oauth():
 
     query_params = st.query_params.to_dict()
 
-    if 'code' not in query_params and 'credentials' not in st.session_state:
-        # Store PKCE code verifier in session state
-        st.session_state["pkce_code_verifier"] = flow.code_verifier
-        
-        # Generate authorization URL with PKCE parameters
+    # Check if code is in query parameters
+    if 'code' in query_params:
+        try:
+            # For security, you can store the code verifier in a more persistent way
+            # Here we'll use a fallback approach
+            flow.fetch_token(code=query_params['code'])
+            credentials = flow.credentials
+            
+            st.session_state['credentials'] = {
+                "token": credentials.token,
+                "refresh_token": credentials.refresh_token
+            }
+            
+            # Clear query parameters to avoid issues on refresh
+            st.query_params.clear()
+            st.rerun()
+        except Exception as e:
+            st.error(f"Authentication error: {str(e)}")
+            return None
+            
+    # If no code and no credentials, show login button
+    if 'credentials' not in st.session_state:
+        # Generate a new code verifier for PKCE
         auth_url, _ = flow.authorization_url(
             prompt="consent",
-            access_type="offline",
-            code_challenge_method="S256"
+            access_type="offline"
         )
         
         st.markdown(f"""
@@ -342,30 +359,7 @@ def handle_oauth():
         """, unsafe_allow_html=True)
         return None
 
-    elif 'code' in query_params and 'credentials' not in st.session_state:
-        # Recreate flow with stored PKCE code verifier
-        flow = Flow.from_client_config(
-            client_config=CLIENT_CONFIG,
-            scopes=SCOPES,
-            redirect_uri=REDIRECT_URI,
-            code_verifier=st.session_state["pkce_code_verifier"]
-        )
-        
-        flow.fetch_token(code=query_params['code'])
-        credentials = flow.credentials
-        
-        # Clean up session state
-        del st.session_state["pkce_code_verifier"]
-        st.session_state['credentials'] = {
-            "token": credentials.token,
-            "refresh_token": credentials.refresh_token
-        }
-        
-        st.query_params.clear()
-        st.rerun()
-
     return st.session_state.get('credentials')
-
 # Rest of the code remains the same...
 
 @st.cache_data(ttl=3600)
