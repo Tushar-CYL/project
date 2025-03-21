@@ -309,13 +309,22 @@ def handle_oauth():
     flow = Flow.from_client_config(
         client_config=CLIENT_CONFIG,
         scopes=SCOPES,
-        redirect_uri=REDIRECT_URI,
-        autogenerate_code_verifier=True
+        redirect_uri=REDIRECT_URI
     )
-    
+
+    # Generate code_verifier if not stored in session
+    if "code_verifier" not in st.session_state:
+        st.session_state["code_verifier"] = flow.code_verifier
+
     query_params = st.query_params.to_dict()
+
     if 'code' not in query_params and 'credentials' not in st.session_state:
-        auth_url, _ = flow.authorization_url(prompt="consent")
+        # Get authorization URL with PKCE challenge
+        auth_url, _ = flow.authorization_url(
+            prompt="consent",
+            code_challenge=flow.code_challenge,
+            code_challenge_method="S256"
+        )
         st.markdown(f"""
         <div class="login-container">
             <div class="login-box">
@@ -329,8 +338,13 @@ def handle_oauth():
         </div>
         """, unsafe_allow_html=True)
         return None
+
     elif 'code' in query_params and 'credentials' not in st.session_state:
-        flow.fetch_token(code=query_params['code'])
+        # Ensure we pass the stored code_verifier
+        flow.fetch_token(
+            code=query_params['code'],
+            code_verifier=st.session_state["code_verifier"]
+        )
         credentials = flow.credentials
         st.session_state['credentials'] = {
             "token": credentials.token,
@@ -338,7 +352,9 @@ def handle_oauth():
         }
         st.query_params.clear()
         st.rerun()
+
     return st.session_state.get('credentials')
+
 
 # Rest of the code remains the same...
 
