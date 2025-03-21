@@ -1,5 +1,3 @@
-
-
 import streamlit as st
 import pandas as pd
 import yaml
@@ -20,7 +18,6 @@ st.set_page_config(
 )
 
 # Modern 3D-style background and enhanced UI
-# Modern Dark Blue Theme
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -287,8 +284,12 @@ if yaml_config:
             "token_uri": "https://accounts.google.com/o/oauth2/token"
         }
     }
-    REDIRECT_URI = "https://adsync.streamlit.app"
-    SCOPES = ["https://www.googleapis.com/auth/adwords"]
+    REDIRECT_URI = "https://adsync.streamlit.app"  # Replace with your actual URL
+    SCOPES = [
+        "https://www.googleapis.com/auth/adwords",
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.profile"
+    ]
 else:
     st.error("Configuration file not found. Please ensure google-ads.yaml exists.")
     st.stop()
@@ -308,7 +309,8 @@ def handle_oauth():
     flow = Flow.from_client_config(
         client_config=CLIENT_CONFIG,
         scopes=SCOPES,
-        redirect_uri=REDIRECT_URI
+        redirect_uri=REDIRECT_URI,
+        autogenerate_code_verifier=True
     )
     
     query_params = st.query_params.to_dict()
@@ -337,6 +339,8 @@ def handle_oauth():
         st.query_params.clear()
         st.rerun()
     return st.session_state.get('credentials')
+
+# Rest of the code remains the same...
 
 @st.cache_data(ttl=3600)
 def get_accessible_customers(_client):  # Changed parameter name with underscore
