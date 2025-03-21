@@ -312,19 +312,19 @@ def handle_oauth():
         client_config=CLIENT_CONFIG,
         scopes=SCOPES,
         redirect_uri=REDIRECT_URI,
-        autogenerate_code_verifier=True
+        autogenerate_code_verifier=True  # Enable PKCE
     )
 
     query_params = st.query_params.to_dict()
 
     if 'code' not in query_params and 'credentials' not in st.session_state:
-        # Store PKCE code_verifier in session state before generating URL
-        st.session_state["code_verifier"] = flow.code_verifier
-        st.session_state["code_challenge"] = flow.code_challenge
+        # Store PKCE code verifier in session state
+        st.session_state["pkce_code_verifier"] = flow.code_verifier
         
+        # Generate authorization URL with PKCE parameters
         auth_url, _ = flow.authorization_url(
             prompt="consent",
-            code_challenge=st.session_state["code_challenge"],
+            access_type="offline",
             code_challenge_method="S256"
         )
         
@@ -343,25 +343,23 @@ def handle_oauth():
         return None
 
     elif 'code' in query_params and 'credentials' not in st.session_state:
-        # Recreate the flow with stored code_verifier
+        # Recreate flow with stored PKCE code verifier
         flow = Flow.from_client_config(
             client_config=CLIENT_CONFIG,
             scopes=SCOPES,
             redirect_uri=REDIRECT_URI,
-            code_verifier=st.session_state["code_verifier"]
+            code_verifier=st.session_state["pkce_code_verifier"]
         )
         
         flow.fetch_token(code=query_params['code'])
         credentials = flow.credentials
         
+        # Clean up session state
+        del st.session_state["pkce_code_verifier"]
         st.session_state['credentials'] = {
             "token": credentials.token,
             "refresh_token": credentials.refresh_token
         }
-        
-        # Cleanup PKCE parameters
-        del st.session_state["code_verifier"]
-        del st.session_state["code_challenge"]
         
         st.query_params.clear()
         st.rerun()
