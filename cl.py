@@ -11,9 +11,9 @@ import base64
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 import os
-import secrets  # Add the missing import for the secrets module
+import secrets
 import hashlib
-import base64
+import json
 # Page Configuration
 st.set_page_config(
     page_title="AdSync Dashboard",
