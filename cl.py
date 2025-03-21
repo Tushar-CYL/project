@@ -291,13 +291,11 @@ if yaml_config:
     }
     REDIRECT_URI = "https://adsync-uu8a.onrender.com"  # Replace with your actual URL
     SCOPES = [
-        "https://www.googleapis.com/auth/adwords",
-        "openid",
-        "https://www.googleapis.com/auth/userinfo.profile"
-    ]
-else:
-    st.error("Configuration file not found. Please ensure google-ads.yaml exists.")
-    st.stop()
+    "https://www.googleapis.com/auth/adwords",
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "https://www.googleapis.com/auth/userinfo.email"
+]
 
 def get_google_ads_client(credentials):
     config = {
@@ -305,84 +303,58 @@ def get_google_ads_client(credentials):
         "client_id": yaml_config['client_id'],
         "client_secret": yaml_config['client_secret'],
         "refresh_token": credentials['refresh_token'],
-        "login_customer_id": yaml_config['login_customer_id'],
         "use_proto_plus": yaml_config['use_proto_plus']
     }
     return GoogleAdsClient.load_from_dict(config)
 
-def generate_code_verifier():
-    code_verifier = secrets.token_urlsafe(96)[:128]
-    return code_verifier
-
-def get_code_challenge(code_verifier):
-    code_challenge = hashlib.sha256(code_verifier.encode('utf-8')).digest()
-    code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8').rstrip('=')
-    return code_challenge
-
 def handle_oauth():
-    flow = Flow.from_client_config(
-        client_config=CLIENT_CONFIG,
-        scopes=SCOPES,
-        redirect_uri=REDIRECT_URI
-    )
-    
     query_params = st.query_params.to_dict()
     
-    # Check if code is in query parameters
     if 'code' in query_params and 'state' in query_params:
         try:
-            # Decode the state parameter which contains our code verifier
             state_json = base64.urlsafe_b64decode(query_params['state'].encode('utf-8')).decode('utf-8')
             state_data = json.loads(state_json)
             code_verifier = state_data.get('code_verifier')
             
-            if not code_verifier:
-                st.error("No code verifier found in state parameter")
-                return None
-                
-            # Fetch token with the code verifier from the state
+            flow = Flow.from_client_config(
+                client_config=CLIENT_CONFIG,
+                scopes=SCOPES,
+                redirect_uri=REDIRECT_URI
+            )
+            
             flow.fetch_token(
                 code=query_params['code'],
                 code_verifier=code_verifier
             )
             
             credentials = flow.credentials
-            
-            # Store tokens in session state
             st.session_state['credentials'] = {
                 "token": credentials.token,
                 "refresh_token": credentials.refresh_token
             }
             
-            # Clear query parameters to avoid issues on refresh
             st.query_params.clear()
             st.rerun()
         except Exception as e:
             st.error(f"Authentication error: {str(e)}")
-            if 'state' in query_params:
-                st.write("Debug: State parameter found in URL")
-                try:
-                    # Try to decode the state to see what's in it
-                    state_json = base64.urlsafe_b64decode(query_params['state'].encode('utf-8')).decode('utf-8')
-                    st.write("State content:", state_json)
-                except Exception as decode_error:
-                    st.write(f"Error decoding state: {str(decode_error)}")
             return None
-            
-    # If no code and no credentials, show login button
+
     if 'credentials' not in st.session_state:
-        # Generate new code verifier for this request
         code_verifier = secrets.token_urlsafe(96)[:128]
         code_challenge = base64.urlsafe_b64encode(
             hashlib.sha256(code_verifier.encode('utf-8')).digest()
         ).decode('utf-8').rstrip('=')
         
-        # Store the code verifier in a state parameter that will be returned by Google
         state_data = {'code_verifier': code_verifier}
         state_json = json.dumps(state_data)
         state_param = base64.urlsafe_b64encode(state_json.encode('utf-8')).decode('utf-8')
         
-        # Generate the auth URL with PKCE parameters and state
+        flow = Flow.from_client_config(
+            client_config=CLIENT_CONFIG,
+            scopes=SCOPES,
+            redirect_uri=REDIRECT_URI
+        )
+        
         auth_url, _ = flow.authorization_url(
             prompt="consent",
             access_type="offline",
@@ -406,18 +378,36 @@ def handle_oauth():
         return None
 
     return st.session_state.get('credentials')
-# Rest of the code remains the same...
 
-@st.cache_data(ttl=3600)
-def get_accessible_customers(_client):  # Changed parameter name with underscore
+# Remove caching from get_accessible_customers
+def get_accessible_customers(client):
     try:
-        customer_service = _client.get_service("CustomerService")
+        customer_service = client.get_service("CustomerService")
         response = customer_service.list_accessible_customers()
         return [cid.split('/')[1] for cid in response.resource_names]
     except GoogleAdsException as ex:
         st.error(f"Google Ads API error: {ex.error.code().name}")
         st.error(ex.error.message)
         return []
+
+def main():
+    credentials = handle_oauth()
+    
+    if credentials:
+        client = get_google_ads_client(credentials)
+        
+        # Always fetch fresh customers list for current user
+        if 'customers' not in st.session_state:
+            with st.spinner("Loading accounts..."):
+                customers = get_accessible_customers(client)
+                if customers:
+                    st.session_state.customers = customers
+                else:
+                    st.error("No accessible Google Ads accounts found")
+
+        if 'customers' in st.session_state:
+            # Let user select from their own customers
+            customer_id = st.sidebar.selectbox("Select Account", st.session_state.customers)
 
 @st.cache_data(ttl=300)
 def fetch_campaign_data(_client, customer_id, start_date, end_date):  # Changed parameter name
