@@ -8,6 +8,8 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google_auth_oauthlib.flow import Flow
 import base64
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 
 # Page Configuration
 st.set_page_config(
@@ -20,7 +22,7 @@ st.set_page_config(
 # Modern 3D-style background and enhanced UI
 st.markdown("""
 <style>
-     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://accounts.google.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://accounts.google.com;">
     
     * {
         font-family: 'Poppins', sans-serif;
