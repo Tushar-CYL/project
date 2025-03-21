@@ -307,12 +307,24 @@ def get_google_ads_client(credentials):
     }
     return GoogleAdsClient.load_from_dict(config)
 
+def generate_code_verifier():
+    code_verifier = secrets.token_urlsafe(96)[:128]
+    return code_verifier
+
+def get_code_challenge(code_verifier):
+    code_challenge = hashlib.sha256(code_verifier.encode('utf-8')).digest()
+    code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8').rstrip('=')
+    return code_challenge
+
 def handle_oauth():
+    # Initialize session state variables if they don't exist
+    if 'code_verifier' not in st.session_state:
+        st.session_state['code_verifier'] = generate_code_verifier()
+
     flow = Flow.from_client_config(
         client_config=CLIENT_CONFIG,
         scopes=SCOPES,
-        redirect_uri=REDIRECT_URI,
-        autogenerate_code_verifier=True  # Enable PKCE
+        redirect_uri=REDIRECT_URI
     )
 
     query_params = st.query_params.to_dict()
@@ -320,11 +332,18 @@ def handle_oauth():
     # Check if code is in query parameters
     if 'code' in query_params:
         try:
-            # For security, you can store the code verifier in a more persistent way
-            # Here we'll use a fallback approach
-            flow.fetch_token(code=query_params['code'])
+            # Use the stored code verifier from session state
+            code_verifier = st.session_state['code_verifier']
+            
+            # Pass the code verifier explicitly when fetching token
+            flow.fetch_token(
+                code=query_params['code'],
+                code_verifier=code_verifier
+            )
+            
             credentials = flow.credentials
             
+            # Store tokens in session state
             st.session_state['credentials'] = {
                 "token": credentials.token,
                 "refresh_token": credentials.refresh_token
@@ -335,14 +354,21 @@ def handle_oauth():
             st.rerun()
         except Exception as e:
             st.error(f"Authentication error: {str(e)}")
+            st.write("Debug info: code_verifier exists in session state: ", 'code_verifier' in st.session_state)
             return None
             
     # If no code and no credentials, show login button
     if 'credentials' not in st.session_state:
-        # Generate a new code verifier for PKCE
+        # Get the stored code verifier
+        code_verifier = st.session_state['code_verifier']
+        code_challenge = get_code_challenge(code_verifier)
+        
+        # Generate the auth URL with PKCE parameters
         auth_url, _ = flow.authorization_url(
             prompt="consent",
-            access_type="offline"
+            access_type="offline",
+            code_challenge=code_challenge,
+            code_challenge_method="S256"
         )
         
         st.markdown(f"""
