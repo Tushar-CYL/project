@@ -1,3 +1,5 @@
+
+
 import streamlit as st
 import pandas as pd
 import yaml
@@ -8,7 +10,6 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google_auth_oauthlib.flow import Flow
 import base64
-import os
 
 # Page Configuration
 st.set_page_config(
@@ -19,6 +20,7 @@ st.set_page_config(
 )
 
 # Modern 3D-style background and enhanced UI
+# Modern Dark Blue Theme
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -28,27 +30,29 @@ st.markdown("""
     }
     
     .main {
-        background: #0a192f;
-        color: #ffffff;
+        background: #0a192f; /* Dark blue background */
+        color: #ffffff; /* White text */
         padding: 1rem;
     }
     
     .stApp {
-        background: #0a192f;
-        color: #ffffff;
+        background: #0a192f; /* Dark blue background */
+        color: #ffffff; /* White text */
     }
     
+    /* Sidebar styling */
     .css-1d391kg {
-        background-color: #112240;
+        background-color: #112240; /* Darker blue for sidebar */
     }
     
     .sidebar .sidebar-content {
-        background-color: #112240;
-        color: #ffffff;
+        background-color: #112240; /* Darker blue for sidebar */
+        color: #ffffff; /* White text */
     }
     
+    /* Cards with 3D effect */
     .metric-card {
-        background: #112240;
+        background: #112240; /* Darker blue for cards */
         border-radius: 15px;
         padding: 24px;
         margin: 10px 0;
@@ -57,10 +61,196 @@ st.markdown("""
         position: relative;
         z-index: 1;
         overflow: hidden;
-        color: #ffffff;
+        color: #ffffff; /* White text */
     }
     
-    /* Remaining CSS styles unchanged from original */
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(225deg, rgba(66, 153, 225, 0.1) 0%, rgba(255, 255, 255, 0) 50%);
+        border-radius: 0 0 0 100%;
+        z-index: -1;
+    }
+    
+    /* Metric styling */
+    .metric-title {
+        color: #a8b2d1; /* Light blue-gray for titles */
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .metric-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff; /* White text */
+        margin-bottom: 8px;
+    }
+    
+    .metric-change {
+        font-size: 13px;
+        font-weight: 500;
+        padding: 4px 8px;
+        border-radius: 12px;
+        display: inline-block;
+    }
+    
+    .metric-change.positive {
+        background-color: rgba(72, 187, 120, 0.1);
+        color: #48bb78;
+    }
+    
+    .metric-change.negative {
+        background-color: rgba(245, 101, 101, 0.1);
+        color: #f56565;
+    }
+    
+    /* Chart containers */
+    .chart-container {
+        background: #112240; /* Darker blue for charts */
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        margin-bottom: 20px;
+        color: #ffffff; /* White text */
+    }
+    
+    .chart-title {
+        color: #ffffff; /* White text */
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #233554; /* Darker blue border */
+    }
+    
+    /* Table styling */
+    .stDataFrame {
+        background: #112240; /* Darker blue for tables */
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        color: #ffffff; /* White text */
+    }
+    
+    /* Button styling */
+    .stButton>button {
+        background-color: #4299e1;
+        color: white;
+        border-radius: 12px;
+        padding: 10px 25px;
+        font-weight: 500;
+        border: none;
+        transition: all 0.2s ease;
+    }
+    
+    .stButton>button:hover {
+        background-color: #3182ce;
+        box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    /* Custom header */
+    .dashboard-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    
+    .dashboard-logo {
+        font-size: 28px;
+        font-weight: 700;
+        background: linear-gradient(90deg, #4299e1, #9f7aea);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-right: 10px;
+    }
+    
+    .dashboard-subtitle {
+        color: #a8b2d1; /* Light blue-gray for subtitles */
+        font-size: 16px;
+        font-weight: 400;
+    }
+    
+    /* Plotly chart styling */
+    .stPlotlyChart {
+        background: #112240; /* Darker blue for charts */
+        border-radius: 15px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .stPlotlyChart:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Login page styling */
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #0a192f;
+    }
+    
+    .login-box {
+        background: #112240;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        max-width: 400px;
+        width: 100%;
+    }
+    
+    .login-box h2 {
+        color: #ffffff;
+        margin-bottom: 20px;
+    }
+    
+    .login-box p {
+        color: #a8b2d1;
+        margin-bottom: 30px;
+    }
+    
+    .google-login-button {
+        background-color: #4285F4;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 25px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .google-login-button:hover {
+        background-color: #357ABD;
+        box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .google-login-button img {
+        width: 20px;
+        margin-right: 10px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -68,7 +258,11 @@ st.markdown("""
 def get_icon_base64(icon_name):
     icons = {
         "money": '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="6" x2="12" y2="12"></line><path d="M12 12L16 16"></path></svg>''',
-        # Other icons remain the same
+        "click": '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>''',
+        "conversion": '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>''',
+        "cost": '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>''',
+        "dashboard": '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>''',
+        "empty": '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'''
     }
     return base64.b64encode(icons[icon_name].encode('utf-8')).decode()
 
@@ -84,18 +278,16 @@ def load_yaml_config():
 yaml_config = load_yaml_config()
 
 # OAuth Configuration
-# OAuth Configuration
 if yaml_config:
     CLIENT_CONFIG = {
         "web": {
             "client_id": yaml_config['client_id'],
             "client_secret": yaml_config['client_secret'],
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "redirect_uris": ["https://adsync-e6x5.onrender.com/"]  # Add this line
+            "token_uri": "https://accounts.google.com/o/oauth2/token"
         }
     }
-    REDIRECT_URI = "https://adsync-e6x5.onrender.com/"  # Must match exactly
+    REDIRECT_URI = "http://localhost:8501"
     SCOPES = ["https://www.googleapis.com/auth/adwords"]
 else:
     st.error("Configuration file not found. Please ensure google-ads.yaml exists.")
@@ -103,12 +295,12 @@ else:
 
 def get_google_ads_client(credentials):
     config = {
-        "developer_token": yaml_config.get("developer_token"),
-        "client_id": yaml_config.get("client_id"),
-        "client_secret": yaml_config.get("client_secret"),
-        "refresh_token": credentials['refresh_token'],  # Use OAuth refresh token
-        "login_customer_id": yaml_config.get("login_customer_id"),
-        "use_proto_plus": yaml_config.get("use_proto_plus", True),
+        "developer_token": yaml_config['developer_token'],
+        "client_id": yaml_config['client_id'],
+        "client_secret": yaml_config['client_secret'],
+        "refresh_token": credentials['refresh_token'],
+        "login_customer_id": yaml_config['login_customer_id'],
+        "use_proto_plus": yaml_config['use_proto_plus']
     }
     return GoogleAdsClient.load_from_dict(config)
 
@@ -146,9 +338,69 @@ def handle_oauth():
         st.rerun()
     return st.session_state.get('credentials')
 
-# Remaining functions unchanged (get_accessible_customers, fetch_campaign_data, format_status)
+@st.cache_data(ttl=3600)
+def get_accessible_customers(_client):  # Changed parameter name with underscore
+    try:
+        customer_service = _client.get_service("CustomerService")
+        response = customer_service.list_accessible_customers()
+        return [cid.split('/')[1] for cid in response.resource_names]
+    except GoogleAdsException as ex:
+        st.error(f"Google Ads API error: {ex.error.code().name}")
+        st.error(ex.error.message)
+        return []
+
+@st.cache_data(ttl=300)
+def fetch_campaign_data(_client, customer_id, start_date, end_date):  # Changed parameter name
+    try:
+        ga_service = _client.get_service("GoogleAdsService")
+        query = f"""
+            SELECT
+                campaign.id,
+                campaign.name,
+                campaign.status,
+                segments.date,
+                metrics.impressions,
+                metrics.clicks,
+                metrics.ctr,
+                metrics.average_cpc,
+                metrics.conversions,
+                metrics.conversions_value,
+                metrics.cost_micros,
+                metrics.search_impression_share
+            FROM campaign
+            WHERE segments.date BETWEEN '{start_date}' AND '{end_date}'
+        """
+        
+        response = ga_service.search_stream(customer_id=customer_id, query=query)
+        
+        data = []
+        for batch in response:
+            for row in batch.results:
+                data.append({
+                    "Campaign ID": row.campaign.id,
+                    "Campaign Name": row.campaign.name,
+                    "Status": row.campaign.status.name,
+                    "Date": row.segments.date,
+                    "Impressions": row.metrics.impressions,
+                    "Clicks": row.metrics.clicks,
+                    "CTR (%)": row.metrics.ctr * 100,
+                    "Avg. CPC": row.metrics.average_cpc / 1e6,
+                    "Conversions": row.metrics.conversions,
+                    "Cost": row.metrics.cost_micros / 1e6,
+                    "Impression Share (%)": row.metrics.search_impression_share * 100 if row.metrics.search_impression_share else 0
+                })
+        return pd.DataFrame(data)
+    except GoogleAdsException as ex:
+        st.error(f"Google Ads API error: {ex.error.code().name}")
+        st.error(ex.error.message)
+        return pd.DataFrame()
+
+def format_status(status):
+    status_class = "active" if status == "ENABLED" else "paused" if status == "PAUSED" else "removed"
+    return f'<span class="pill-status {status_class.lower()}">{status.title()}</span>'
 
 def main():
+    # Handle OAuth and get credentials
     credentials = handle_oauth()
     
     if credentials:
