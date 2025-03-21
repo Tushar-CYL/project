@@ -320,25 +320,27 @@ def get_code_challenge(code_verifier):
     return code_challenge
 
 def handle_oauth():
-    # Initialize session state variables if they don't exist
-    if 'code_verifier' not in st.session_state:
-        st.session_state['code_verifier'] = generate_code_verifier()
-
     flow = Flow.from_client_config(
         client_config=CLIENT_CONFIG,
         scopes=SCOPES,
         redirect_uri=REDIRECT_URI
     )
-
+    
     query_params = st.query_params.to_dict()
-
+    
     # Check if code is in query parameters
-    if 'code' in query_params:
+    if 'code' in query_params and 'state' in query_params:
         try:
-            # Use the stored code verifier from session state
-            code_verifier = st.session_state['code_verifier']
+            # Decode the state parameter which contains our code verifier
+            state_json = base64.urlsafe_b64decode(query_params['state'].encode('utf-8')).decode('utf-8')
+            state_data = json.loads(state_json)
+            code_verifier = state_data.get('code_verifier')
             
-            # Pass the code verifier explicitly when fetching token
+            if not code_verifier:
+                st.error("No code verifier found in state parameter")
+                return None
+                
+            # Fetch token with the code verifier from the state
             flow.fetch_token(
                 code=query_params['code'],
                 code_verifier=code_verifier
@@ -357,21 +359,36 @@ def handle_oauth():
             st.rerun()
         except Exception as e:
             st.error(f"Authentication error: {str(e)}")
-            st.write("Debug info: code_verifier exists in session state: ", 'code_verifier' in st.session_state)
+            if 'state' in query_params:
+                st.write("Debug: State parameter found in URL")
+                try:
+                    # Try to decode the state to see what's in it
+                    state_json = base64.urlsafe_b64decode(query_params['state'].encode('utf-8')).decode('utf-8')
+                    st.write("State content:", state_json)
+                except Exception as decode_error:
+                    st.write(f"Error decoding state: {str(decode_error)}")
             return None
             
     # If no code and no credentials, show login button
     if 'credentials' not in st.session_state:
-        # Get the stored code verifier
-        code_verifier = st.session_state['code_verifier']
-        code_challenge = get_code_challenge(code_verifier)
+        # Generate new code verifier for this request
+        code_verifier = secrets.token_urlsafe(96)[:128]
+        code_challenge = base64.urlsafe_b64encode(
+            hashlib.sha256(code_verifier.encode('utf-8')).digest()
+        ).decode('utf-8').rstrip('=')
         
-        # Generate the auth URL with PKCE parameters
+        # Store the code verifier in a state parameter that will be returned by Google
+        state_data = {'code_verifier': code_verifier}
+        state_json = json.dumps(state_data)
+        state_param = base64.urlsafe_b64encode(state_json.encode('utf-8')).decode('utf-8')
+        
+        # Generate the auth URL with PKCE parameters and state
         auth_url, _ = flow.authorization_url(
             prompt="consent",
             access_type="offline",
             code_challenge=code_challenge,
-            code_challenge_method="S256"
+            code_challenge_method="S256",
+            state=state_param
         )
         
         st.markdown(f"""
